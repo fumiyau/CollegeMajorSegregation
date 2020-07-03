@@ -1,6 +1,6 @@
 #=====================================================================
 # 2020/06/29
-# College major segregation
+# College major segregation (enrolls)
 # Fumiya Uchikoshi, uchikoshi@princeton.edu
 # Ryota Mugiyama
 # Megumi Oguro
@@ -14,11 +14,12 @@ library(tidyverse)
 library(dplyr)
 library(ggthemes)
 library(knitr)
+library(readxl)
 
 ######################################################################
 # Set directory
 ######################################################################
-setwd("/Users/fumiyau/Dropbox (Princeton)/09.CollegeMajor/CollegeMajorSegregation/2.Data/NameEdited/")
+setwd("/Users/fumiyau/Dropbox (Princeton)/09.CollegeMajor/CollegeMajorSegregation/2.Data/NameEdited/enrolls")
 
 ######################################################################
 # lapply for 1986-2019 (except for 1999)

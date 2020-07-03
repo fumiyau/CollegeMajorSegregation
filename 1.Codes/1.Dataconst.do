@@ -320,16 +320,35 @@ drop if major >=69
 
 save 2.Data/dtafiles/dfint1975-1987ed.dta,replace
 
-******************************************
-*************** Correction ***************
-******************************************
+*****************************************
+***************   Merge   ***************
+*****************************************
 use 2.Data/dtafiles/dfint1988-2019ed.dta,clear
 append using 2.Data/dtafiles/dfint1975-1987ed.dta
 
-****************************
+*Label define and save
+gen majornl=major
+label define typel 1"Total" 2"National" 3"Public" 4"Private"
+label values type typel
+
+*label define majorl 1"文学" 2"史学" 3"哲学" 4"人文科学・その他" 5"法学・政治学" 6"商学・経済学" 7"社会学" 8"社会科学・その他" 9"数学" 10"物理学" 11"化学" 12"生物学" 13"地学" 14"理学・その他" 15"機械工学" 16"電気通信工学" 17"土木建築工学" 18"応用化学" 19"応用理学" 20"原子力工学" 21"鉱山学" 22"金属工学" 23"繊維工学" 24"船舶工学" 25"航空工学" 26"経営工学" 27"工芸学" 28"工学・その他" 29"農学" 30"農芸化学" 31"農業工学" 32"農業経済学" 33"林学" 34"林産学" 35"獣医学畜産学" 36"水産学" 37"農学・その他" 38"医学" 39"歯学" 40"薬学" 41"看護学" 42"保険・その他" 43"商船学" 44"家政学" 45"食物学" 46"被服学" 47"住居学" 48"児童学" 49"教育学" 50"小学校課程" 51"中学校課程" 52"高等学校課程" 53"特別教科課程" 54"盲学校課程" 55"聾学校課程" 56"養護学校課程" 57"幼稚園課程" 58"体育学" 59"教育学・その他" 60"美術" 61"デザイン" 62"音楽" 63"芸術・その他" 64"教養学" 65"総合科学" 66"教養課程（文科）" 67"教養課程（理科）" 68"教養課程（その他）"
+label define majorl 1"Literature" 2"History" 3"Philosophy" 4"Humanities: Others" 5"Law and politics" 6"Commerce and economics" 7"Sociology" 8"Social sciences: Others" 9"Mathematics" 10"Physics" 11"Chemistry" 12"Biology" 13"Geography" 14"Physical sciences: Others" 15"Mechanical engineering" 16"Telecommunications engineering" 17"Civil engineering" 18"Applied chemistry" 19"Applied science" 20"Nuclear engineering" 21"Mining engineering" 22"Metallurgical engineering" 23"Textile engineering" 24"Marine engineering" 25"Aeronautical engineering" 26"Engineering management" 27"Crafts" 28"Engineering: Others" 29"Agricultural sciences" 30"Agricultural chemistry" 31"Agricultural engineering" 32"Agricultural economics" 33"Forestry" 34"Forest products" 35"Veterinary medicine" 36"Fisheries science" 37"Agricultural sciences: Others" 38"Medicine" 39"Dentistry" 40"Pharmacy" 41"Nursing" 42"Health: Others" 43"Merchant marine" 44"Home economics" 45"Food science" 46"Clothing" 47"Housing" 48"Child" 49"Pedagogy" 50"Elementary school education" 51"Junior high school education" 52"High school education" 53"Specialized subjects education" 54"Visually impaired education" 55"Deaf education" 56"Special school education" 57"Kindergarten education" 58"Physical education" 59"Pedagogy: Others" 60"Fine arts" 61"Design" 62"Music" 63"Fine arts: Others" 64"Liberal arts" 65"General science" 66"Liberal arts (humanities and social sciene)" 67"Liberal arts (science)" 68"Others: Others"
+label values major majorl
+* 人文科学・その他：国際・地域系
+
+******************************************
+*************** Correction ***************
+******************************************
 replace men = 19707 if year == 1999 & type == 4 & major == 18
 
-*Collapse
+save "2.Data/dtafiles/dfint1975-2019ed.dta",replace
+
+
+******************************************
+*************  Incl others  **************
+******************************************
+use "2.Data/dtafiles/dfint1975-2019ed.dta",clear
+
 sort type year major
 by type year major: gen summen=sum(men)
 by type year major: gen sumwomen=sum(women)
@@ -356,14 +375,40 @@ sort type year major
 bysort type year: gen scorex=100*(1/2)*(abs(MitMt-FitFt))
 bysort type year: gen score=sum(scorex)
 
-*Label define and save
-gen majornl=major
-label define typel 1"Total" 2"National" 3"Public" 4"Private"
-label values type typel
-
-*label define majorl 1"文学" 2"史学" 3"哲学" 4"人文科学・その他" 5"法学・政治学" 6"商学・経済学" 7"社会学" 8"社会科学・その他" 9"数学" 10"物理学" 11"化学" 12"生物学" 13"地学" 14"理学・その他" 15"機械工学" 16"電気通信工学" 17"土木建築工学" 18"応用化学" 19"応用理学" 20"原子力工学" 21"鉱山学" 22"金属工学" 23"繊維工学" 24"船舶工学" 25"航空工学" 26"経営工学" 27"工芸学" 28"工学・その他" 29"農学" 30"農芸化学" 31"農業工学" 32"農業経済学" 33"林学" 34"林産学" 35"獣医学畜産学" 36"水産学" 37"農学・その他" 38"医学" 39"歯学" 40"薬学" 41"看護学" 42"保険・その他" 43"商船学" 44"家政学" 45"食物学" 46"被服学" 47"住居学" 48"児童学" 49"教育学" 50"小学校課程" 51"中学校課程" 52"高等学校課程" 53"特別教科課程" 54"盲学校課程" 55"聾学校課程" 56"養護学校課程" 57"幼稚園課程" 58"体育学" 59"教育学・その他" 60"美術" 61"デザイン" 62"音楽" 63"芸術・その他" 64"教養学" 65"総合科学" 66"教養課程（文科）" 67"教養課程（理科）" 68"教養課程（その他）"
-label define majorl 1"Literature" 2"History" 3"Philosophy" 4"Humanities: Others" 5"Law and politics" 6"Commerce and economics" 7"Sociology" 8"Social sciences: Others" 9"Mathematics" 10"Physics" 11"Chemistry" 12"Biology" 13"Geography" 14"Physical sciences: Others" 15"Mechanical engineering" 16"Telecommunications engineering" 17"Civil engineering" 18"Applied chemistry" 19"Applied science" 20"Nuclear engineering" 21"Mining engineering" 22"Metallurgical engineering" 23"Textile engineering" 24"Marine engineering" 25"Aeronautical engineering" 26"Engineering management" 27"Crafts" 28"Engineering: Others" 29"Agricultural sciences" 30"Agricultural chemistry" 31"Agricultural engineering" 32"Agricultural economics" 33"Forestry" 34"Forest products" 35"Veterinary medicine" 36"Fisheries science" 37"Agricultural sciences: Others" 38"Medicine" 39"Dentistry" 40"Pharmacy" 41"Nursing" 42"Health: Others" 43"Merchant marine" 44"Home economics" 45"Food science" 46"Clothing" 47"Housing" 48"Child" 49"Pedagogy" 50"Elementary school education" 51"Junior high school education" 52"High school education" 53"Specialized subjects education" 54"Visually impaired education" 55"Deaf education" 56"Special school education" 57"Kindergarten education" 58"Physical education" 59"Pedagogy: Others" 60"Fine arts" 61"Design" 62"Music" 63"Fine arts: Others" 64"Liberal arts" 65"General science" 66"Liberal arts (humanities and social sciene)" 67"Liberal arts (science)" 68"Others: Others"
-label values major majorl
-* 人文科学・その他：国際・地域系
-
 save "2.Data/dtafiles/Cont.dta",replace
+
+******************************************
+*************  Excl others  **************
+******************************************
+use "2.Data/dtafiles/dfint1975-2019ed.dta",clear
+gen other=1 if major ==4 | major == 8 | major == 14 | major == 28 | major == 37 | major == 42 | major == 59 | major == 63 | major == 68
+drop if other == 1
+drop other
+
+sort type year major
+by type year major: gen summen=sum(men)
+by type year major: gen sumwomen=sum(women)
+by type year major: egen maxmen=max(summen)
+by type year major: egen maxwomen=max(sumwomen)
+by type year major: gen n=_n
+keep if n==1
+drop men women summen sumwomen n
+rename maxmen men
+rename maxwomen women
+
+*Create Mit/Mt and  Fit/Ft
+local sex "women men"
+foreach x of local sex{
+bysort type year: gen `x'sum=sum(`x')
+bysort type year: egen `x'max=max(`x'sum)
+}
+drop mensum womensum
+gen MitMt=men/menmax
+gen FitFt=women/womenmax
+
+*Create D index
+sort type year major
+bysort type year: gen scorex=100*(1/2)*(abs(MitMt-FitFt))
+bysort type year: gen score=sum(scorex)
+
+save "2.Data/dtafiles/Cont_rist.dta",replace
