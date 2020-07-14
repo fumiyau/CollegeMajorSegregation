@@ -62,7 +62,7 @@ forvalues i = 1/4{
 	(scatter FitFt year if year == 2019 , mlabposition(7) mlabc(gs8) `opt_scatter2' `opt_by' ) ///
 	if type == `i',  ylabel(0(10)40, format(%2.0f) labsize(medsmall)) xtick(1975(5)2020, grid) xlabel(1975(15)2020, labsize(medsmall)) ///
 	scheme(plotplain) xtitle("") legend(order(1 2) row(1) pos(6) label(1 "Mit / Mt") label(2 "Fit / Ft"))
-	graph export 3.Results/supplement/`opt_title`i''.pdf,replace 
+	graph export 3.Results/supplement/excl_others/`opt_title`i''.pdf,replace 
 }
 
 **Overall : D index

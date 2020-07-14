@@ -1,0 +1,69 @@
+major,numx,stem
+Literature,1,0
+History,2,0
+Philosophy,3,0
+Humanities: Others,4,0
+Law and politics,5,0
+Commerce and economics,6,0
+Sociology,7,0
+Social sciences: Others,8,0
+Mathematics,9,1
+Physics,10,1
+Chemistry,11,1
+Biology,12,1
+Geography,13,1
+Physical sciences: Others,14,1
+Mechanical engineering,15,1
+Telecommunications engineering,16,1
+Civil engineering,17,1
+Applied chemistry,18,1
+Applied science,19,1
+Nuclear engineering,20,1
+Mining engineering,21,1
+Metallurgical engineering,22,1
+Textile engineering,23,1
+Marine engineering,24,1
+Aeronautical engineering,25,1
+Engineering management,26,1
+Crafts,27,1
+Engineering: Others,28,1
+Agricultural sciences,29,1
+Agricultural chemistry,30,1
+Agricultural engineering,31,1
+Agricultural economics,32,1
+Forestry,33,1
+Forest products,34,1
+Veterinary medicine,35,1
+Fisheries science,36,1
+Agricultural sciences: Others,37,1
+Medicine,38,2
+Dentistry,39,2
+Pharmacy,40,2
+Nursing,41,2
+Health: Others,42,2
+Merchant marine,43,0
+Home economics,44,0
+Food science,45,0
+Clothing,46,0
+Housing,47,0
+Child,48,0
+Pedagogy,49,0
+Elementary school education,50,0
+Junior high school education,51,0
+High school education,52,0
+Specialized subjects education,53,0
+Visually impaired education,54,0
+Deaf education,55,0
+Special school education,56,0
+Kindergarten education,57,0
+Physical education,58,0
+Pedagogy: Others,59,0
+Fine arts,60,0
+Design,61,0
+Music,62,0
+Fine arts: Others,63,0
+Liberal arts,64,0
+General science,65,0
+Liberal arts (humanities and social sciene),66,0
+Liberal arts (science),67,0
+,,0
