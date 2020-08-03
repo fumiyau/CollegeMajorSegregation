@@ -22,6 +22,14 @@ library(readxl)
 setwd("/Users/fumiyau/Dropbox (Princeton)/09.CollegeMajor/CollegeMajorSegregation/2.Data/NameEdited/Graduates")
 
 ######################################################################
+# Assign colors
+######################################################################
+cbp1 <- c("#A6CEE3", "#E0E0E0", "#E6AB02", "#1F78B4",
+          "#878787", "#A6761D")
+cbp2 <- c("#999999", "#E69F00", "#56B4E9", "#009E73",
+          "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
+######################################################################
 # lapply for 1986-2019 (except for 1999 and 2005)
 ######################################################################
 
@@ -380,6 +388,11 @@ label <- read_csv("../../Labeling.csv") %>%
 
 df_all_integ <- bind_rows(df_all_v1,df_all_v2,df_all_v3,df_all_v4,df_all_v5,df_all_v6,df_all_v7) %>% 
   dplyr::select(-major) %>% 
+  mutate(inst=case_when(
+    inst == 1 ~ "Total",
+    inst == 2 ~ "National & Public",
+    inst == 3 ~ "National & Public",
+    inst == 4 ~ "Private")) %>% 
   group_by(year,inst,numx) %>% 
   summarise_all(list(sum)) %>% 
   left_join(label) %>% 
@@ -390,21 +403,31 @@ df_all_integ <- bind_rows(df_all_v1,df_all_v2,df_all_v3,df_all_v4,df_all_v5,df_a
       stem == 1 ~ "STEM",
       stem == 2 ~ "Health"
     ),
-    inst=case_when(
-      inst == 1 ~ "Total",
-      inst == 2 ~ "National",
-      inst == 3 ~ "Public",
-      inst == 4 ~ "Private"),
     stem = factor(stem,levels=c("Non-STEM","STEM","Health")),
-    inst = factor(inst,levels=c("Total","National","Public","Private"))
+    inst = factor(inst,levels=c("Total","National & Public","Private"))
   )
 
 #write.csv(df_all_integ, "/Users/fumiyau/Dropbox (Princeton)/09.CollegeMajor/CollegeMajorSegregation/2.Data/NameEdited/df_all_grad.csv")
 
+######################################################################
+# Get proportion
+######################################################################
+df_all_integ %>% 
+  filter(year==1975 | year==1990| year == 2005 | year == 2019) %>% 
+  mutate(total=men+women) %>% 
+  select(inst,year,stem,total) %>% 
+  group_by(year,inst,stem) %>% 
+  summarise_all(list(sum)) %>% 
+  mutate(sum=sum(total),
+         row=100*total/sum) %>% 
+  select(year,inst,stem,row) %>% 
+  arrange(inst,year) %>% 
+  pivot_wider(names_from = "stem", 
+              values_from = "row") %>% 
+write.csv("/Users/fumiyau/Dropbox (Princeton)/09.CollegeMajor/CollegeMajorSegregation/2.Data/NameEdited/rowprop.csv")
 
 ######################################################################
-# Get contribution and pick up major contributors
-# memo 18個は少し多いかもしれないのでthreshholdをもう少し高めにしてもいいかもしれない
+# Get distribution for Appendix 1
 ######################################################################
 df_cont <- df_all_integ %>% 
   group_by(year,inst) %>% 
@@ -415,16 +438,38 @@ df_cont <- df_all_integ %>%
          scorex=100*(1/2)*(abs(contMitMt-contFitFt)),
          score=sum(scorex))
 
-df_cont %>% filter(year==1975 | year == 2019)
+df_cont %>% filter(year==1975 | year == 2019) %>% 
+  dplyr::select(year,inst,major,contMitMt,contFitFt) %>% 
+  pivot_wider(names_from = c("inst","year"), 
+              values_from = c(contMitMt,contFitFt)) %>% 
+  write.csv("../../../3.Results/appendix1.csv")
 
-# Pick up top contributions
+df_cont %>% filter(year==1975 | year == 2019) %>% 
+  filter(major == "Literature") %>% 
+  dplyr::select(year,inst,major,mensum,womensum) %>% 
+  pivot_wider(names_from = c("inst"), 
+              values_from = c(mensum,womensum))
+
+######################################################################
+# Get distribution for Appendix 2
+######################################################################
+df_cont %>% filter(year==1975 | year ==1990 | year ==2005 | year == 2019) %>% 
+  dplyr::select(year,inst,major,scorex) %>% 
+  pivot_wider(names_from = c("inst","year"), 
+              values_from = c(scorex)) %>% 
+  write.csv("../../../3.Results/appendix2.csv")
+
+######################################################################
+# Pick up major contributors
+######################################################################
 df_cont_rel <- df_cont %>% 
-  filter(inst=="Total") %>% 
+  filter(inst=="Total" & (year==1975 | year==2019)) %>% 
   arrange(year,inst,scorex) %>% 
   group_by(year) %>% 
   mutate(score_order=cumsum(scorex),
          score_rel_order=as.numeric(score_order/score)) %>% 
-  filter(score_rel_order>0.25)
+  filter(score_rel_order>(1/3))
+unique(df_cont_rel$major)
 
 df_cont_rel1975 <-  df_cont_rel %>% 
   filter(year==1975) %>% 
@@ -446,17 +491,37 @@ df_cont_long <- df_cont %>%
     values_drop_na = TRUE
   )
 
-for (i in c("Total","National","Public","Private")){
+df_cont_longx <- df_cont_long %>% 
+  left_join(df_cont_rel1975) %>% 
+  left_join(df_cont_rel2019) %>% 
+  filter(flag1==1 | flag2==1) %>% 
+  filter((year == 2019 | year ==1975)) 
+unique(df_cont_longx$major)
+
+#year <- c(1975, 2019)
+#flag <- c(1,1)
+#flags <- tibble(year, flag)
+
+for (i in c("Total","National & Public","Private")){
   df_cont_longx <- df_cont_long %>% 
+    #   left_join(flags, by = "year") %>% 
     left_join(df_cont_rel1975) %>% 
     left_join(df_cont_rel2019) %>% 
     filter(flag1==1 | flag2==1) %>% 
+    #    mutate(score_label = as.numeric(round(flag * value,2))) %>% 
+    #    mutate(score_point = round(flag * value,2)) %>% 
     filter(inst==i) 
-  ggplot(df_cont_longx,aes(x=year, y= value, group=sex)) + geom_line(aes(linetype=sex)) + facet_wrap(~major)+
+  ggplot(df_cont_longx,aes(x=year, y= value, group=sex)) + 
+    geom_line(aes(linetype=sex)) + 
+#    geom_point(aes(y = score_point, x = year, group=sex)) + 
+#    geom_text(vjust = "inward", hjust = "inward") + 
     theme_few()+xlab("")+ylab("")+theme(legend.title=element_blank())+
-    theme(axis.text.x=element_text(angle=60,vjust=1,hjust=1))
-  ggsave(height=6,width=12,dpi=200, filename= paste("../../../3.Results/Top18_",i,"_grads.pdf",sep=""),  family = "Helvetica")
+    theme(axis.text.x=element_text(angle=60,vjust=1,hjust=1))+
+    facet_wrap(~major)+
+    xlim(1975, 2020)+ ylim(0,0.4)
+  ggsave(height=6,width=12,dpi=200, filename= paste("../../../3.Results/Top13_",i,"_grads.pdf",sep=""),  family = "Helvetica")
 }
+
 
 ######################################################################
 # Excluding others for sensitivity analysis
@@ -471,7 +536,8 @@ df_cont_rist <- df_all_integ %>%
          contMitMt=men/mensum,
          contFitFt=women/womensum,
          scorex=100*(1/2)*(abs(contMitMt-contFitFt)),
-         score=sum(scorex))
+         score=sum(scorex)) %>% 
+  filter(year== 1975 | year == 2019)
 
 ######################################################################
 # Descriptive trends
@@ -480,12 +546,46 @@ df_cont_rist <- df_all_integ %>%
 #################
 #### overall ####
 #################
+year <- c(1975, 1990, 2005, 2019)
+flag <- c(1,1,1,1)
+flags <- tibble(year, flag)
 df_cont %>% 
   filter(numx==1) %>% 
-  ggplot(aes(x=year, y= score, group=inst, color=inst)) + geom_line(aes(linetype=inst)) +
-  theme_few()+xlab("")+ylab("")+theme(legend.title=element_blank())+
-  scale_color_manual(values=cbp2)
-ggsave(height=6,width=9,dpi=200, filename="../../../3.Results/Overal_inst_grads.pdf",  family = "Helvetica")
+  left_join(flags, by = "year") %>% 
+  mutate(score_label = as.numeric(round(flag * score,1))) %>% 
+  mutate(score_point = round(flag * score,1)) %>% 
+  ggplot(aes(x=year, y= score, label = as.factor(score_label))) + geom_line() + 
+  geom_point(aes(y = score_point, x = year)) + 
+  geom_text(vjust = 1.5, hjust = 1) + 
+  xlim(1970, 2020) + ylim(0,100) +
+  theme_few()+xlab("")+ylab("")+theme(legend.title=element_blank(), 
+                                      legend.position = "none")+
+  facet_wrap(~inst, ncol = 3)
+
+#df_cont %>% 
+#  filter(numx==1) %>% 
+#  ggplot(aes(x=year, y= score, group=inst, color=inst)) + geom_line(aes(linetype=inst)) +
+#  theme_few()+xlab("")+ylab("")+theme(legend.title=element_blank())+
+#  scale_color_manual(values=cbp2)
+ggsave(height=4,width=8,dpi=200, filename="../../../3.Results/Overal_inst_grads.pdf",  family = "Helvetica")
+
+table2 <- df_all_integ %>% 
+  group_by(year,inst) %>% 
+  mutate(mensum=sum(men),
+         womensum=sum(women),
+         contMitMt=men/mensum,
+         contFitFt=women/womensum,
+         scorex=100*(1/2)*(abs(contMitMt-contFitFt))) %>% 
+  group_by(year,inst,stem) %>% 
+  mutate(score=sum(scorex)) %>% #summarise by stem
+  filter(major=="Literature" | major == "Mathematics" | major == "Medicine") %>% 
+  filter(year==1975 | year == 1990 | year == 2005 | year == 2019) %>% 
+  dplyr::select(year,inst,stem,score) %>% 
+  pivot_wider(names_from = c("stem"), 
+              values_from = score) %>% 
+  arrange(inst,year)
+
+write.csv(table2, "../../../3.Results/D_stem.csv")
 
 #################
 #### by STEM ####
@@ -504,7 +604,7 @@ df_cont_stem %>%
   filter(numx==1 | numx == 9 | numx == 38) %>% 
   mutate(stem=as.factor(stem)) %>% 
   ggplot(aes(x=year, y= score, group=stem, color=stem)) + geom_line(aes(linetype=stem))  + facet_wrap(~major)+
-  facet_wrap(~inst)+theme_few()+xlab("")+ylab("")+theme(legend.title=element_blank())+
+  facet_wrap(~inst)+theme_few()+xlab("")+ylab("")+theme(legend.title=element_blank(),legend.position="bottom")+
   scale_color_manual(values=cbp2)
 ggsave(height=6,width=9,dpi=200, filename="../../../3.Results/Overal_inst_stem_grads.pdf",  family = "Helvetica")
 
@@ -513,7 +613,7 @@ ggsave(height=6,width=9,dpi=200, filename="../../../3.Results/Overal_inst_stem_g
 ######################################################################
 
 All <- lapply(c(1975,1990,2005,2019),function(i){
-  lapply(c("Total","National","Public","Private"),function(j){
+  lapply(c("Total","National & Public","Private"),function(j){
     df_cont %>% ungroup() %>% 
       dplyr::select(inst,year,major,v_Mj=men,v_Fj=women) %>% 
       filter(year==i & inst == j) %>% 
@@ -659,6 +759,16 @@ dfx <- comp1 %>%
 
 ggplot(dfx, aes(x=year, y=value, fill=cont,group=cont)) + 
   geom_bar(stat="identity")+xlab("")+ylab("")+theme_few() +facet_wrap(~inst)+scale_fill_manual(values=cbp1)+
-  theme(legend.title=element_blank())+theme(axis.text.x=element_text(angle=60,vjust=1,hjust=1))
-ggsave(height=6,width=8,dpi=200, filename="../../../3.Results/Decomp_rev_grads.pdf",  family = "Helvetica")
+  theme(legend.title=element_blank(), legend.position = "bottom")+theme(axis.text.x=element_text(angle=60,vjust=1,hjust=1))
+ggsave(height=5,width=8,dpi=200, filename="../../../3.Results/Decomp_rev_grads.pdf",  family = "Helvetica")
 
+dfx %>% 
+  filter(year=="1975-2019" & inst =="Total") %>% 
+  ungroup() %>% 
+  mutate(score=sum(value)) 
+
+df_cont %>% filter(year==1975 | year ==2019) %>% 
+  filter(numx==1 & inst =="Total") %>% 
+  dplyr::select(year, score)
+  
+  
